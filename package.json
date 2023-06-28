@@ -1,0 +1,19 @@
+{
+  "name": "zutils",
+  "version": "1.0.0",
+  "description": "utils",
+  "main": "immtree.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/z-nest/zutils.git"
+  },
+  "author": "fred",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/z-nest/zutils/issues"
+  },
+  "homepage": "https://github.com/z-nest/zutils#readme"
+}
