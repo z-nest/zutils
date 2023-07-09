@@ -1,97 +1,26 @@
-class Transaction {
-    constructor(p) {
-        this.p = p
-        this.da = new Array()
-    }
-
-    begin() {
-        if (this.p != null) {
-            this.p.begin()
-        }
-    }
-
-    empty() {
-        return this.da.length == 0
-    }
-
-    push(obj, data) {
-        this.da.push({ object: obj, data: data })
-    }
-
-    commit() {
-        this.da.forEach(ele => {
-            ele.object.commit(ele.data)
-        })
-
-        if (this.p != null) {
-            this.p.commit()
-        }
-    }
-}
-
-class RSlice {
-    constructor(start, end, value) {
-        this.start = start
-        this.end = end
-        this.value = value
-    }
-
-    value() {
-        return this.value
-    }
-}
-
-class RBlock {
-    constructor(v) {
-        this.offset = 0
-        this.v = v
-        this.sls = new Array()
-    }
-
-    value() {
-        return this.v
-    }
-
-    left() {
-        if (this.offset >= this.v.length) {
-            return null
-        }
-
-        return this.v.slice(this.offset, this.v.length)
-    }
-
-    slice(off) {
-        let v = this.v.slice(this.offset, this.offset + off)
-        this.sls.push(new RSlice(this.offset, this.offset + off, v))
-
-        this.offset += off
-        if (this.offset > this.v.length) {
-            this.offset = this.v.length
-        }
-
-        return v
-    }
-
-    slices() {
-        return this.sls
-    }
-
-    EOB() {
-        return this.offset == this.v.length
-    }
-}
-
-class RLine {
-    constructor(v) {
+class Line {
+    constructor(no, ln) {
+        this.no = no
+        this.v = ln
         this.off = 0
-        this.v = v
+        this.toff = 0
     }
 
-    commit(off) {
-        this.off += off
+    number() {
+        return this.no
+    }
+
+    commitTx() {
+        this.off = this.toff
         if (this.off > this.v.length) {
             this.off = this.v.length
         }
+    }
+
+    move(pos) {
+        this.toff = this.off + pos
+
+        return this
     }
 
     value() {
@@ -99,34 +28,51 @@ class RLine {
     }
 
     EOL() {
-        return this.commit == this.v.length
+        return this.off == this.v.length
     }
 }
 
-class RLines {
-    constructor(r, s, e) {
-        this.r = r
-        this.start = s
+class Lines {
+    constructor(txt, s, e) {
+        this.txt = txt
+        this.st = s
         this.end = e
         this.cur = s
         this.tcur = s
+        this.tx = null
     }
 
-    begin() {
+    beginTx() {
         this.tcur = this.cur
+        this.tx = new Array()
     }
 
-    commit() {
+    commitTx() {
         this.cur = this.tcur
+        this.tx.forEach(ln => { ln.commitTx() })
+        this.tx = null
+    }
+
+    value() {
+        let ct = ""
+        let idx = this.st
+        for (; idx < this.end - 1; idx++) {
+            let ln = this.txt.line(idx)
+            ct += ln.value() + '\n'
+        }
+        let ln = this.txt.line(idx)
+        ct += ln.value()
+
+        return ct
     }
 
     first() {
-        return this.r.line(this.start)
+        return this.txt.line(this.st)
     }
 
     next() {
         if (this.tcur < this.end - 1) {
-            return this.r.line(++this.tcur)
+            return this.txt.line(++this.tcur)
         }
         this.tcur = this.end
         return null
@@ -134,35 +80,33 @@ class RLines {
 
     back() {
         if (this.tcur > 0) {
-            return this.r.line(--this.tcur)
+            return this.txt.line(--this.tcur)
         }
     }
 
     current() {
-        return this.r.line(this.tcur)
+        return this.txt.line(this.tcur)
+    }
+
+    to(ln) {
+        if (ln >= this.st && ln <= this.end) {
+            this.tcur = ln
+            return this.txt.line(ln)
+        }
+
+        return null
     }
 
     number() {
         return this.tcur
     }
 
-    to(ln) {
-        if (ln >= this.start && ln <= this.end) {
-            this.tcur = ln
-            return this.r.line(ln)
-        }
-
-        return null
+    lines(s, e) {
+        return new Lines(this.txt, s, e)
     }
 
-    block(s, e) {
-        let v = ""
-        for (let i = s; i < e; i++) {
-            let ln = this.r.line(i)
-            v += ln.value()
-        }
-
-        return new RBlock(v)
+    move(lno, pos) {
+        this.tx.push(this.txt.line(lno).move(pos))
     }
 
     EOLS() {
@@ -170,68 +114,63 @@ class RLines {
     }
 }
 
-class Reader {
-    constructor(txt) {
-        this.text = txt
-        this.cur = 0
+class Text {
+    constructor(lns) {
         this.lns = new Array()
-        this.len = 0
-
-        this.read()
+        let i = 0
+        lns.forEach(ln => {
+            this.lns.push(new Line(i, ln))
+            i++
+        })
     }
 
-    read() {
+    line(lno) {
+        return this.lns[lno]
+    }
+
+    lines(start, end) {
+        if (end == -1) {
+            end = this.lns.length
+        }
+
+        return new Lines(this, start, end)
+    }
+}
+
+class Reader {
+    constructor() {
+    }
+
+    read(txt) {
         let pos = 0
         let ln = ''
-        while (pos < this.text.length) {
-            if (this.text[pos] == '\r') {
+        let lns = new Array()
+        while (pos < txt.length) {
+            if (txt[pos] == '\r') {
                 pos++
                 continue
             }
 
-            if (this.text[pos] == '\n') {
-                this.lns.push(new RLine(ln))
+            if (txt[pos] == '\n') {
+                lns.push(ln)
                 ln = ''
             } else {
-                ln += this.text[pos]
+                ln += txt[pos]
             }
 
             pos++
         }
-        this.lns.push(new RLine(ln))
-        this.len = this.lns.length
+        lns.push(ln)
+        console.debug("read text to lines ", lns)
 
-        console.debug("read text to lines ", this.lns)
-        return
+        return lns
     }
 
-    line(ln) {
-        if (ln >= this.len) {
-            return null
-        }
+    load(txt) {
+        let lns = this.read(txt)
 
-        return this.lns[ln]
-    }
-
-    empty() {
-        return this.text.length == 0
-    }
-
-    length() {
-        return this.lns.length
-    }
-
-    lines(s, e) {
-        if (this.lns.length == 0) {
-            return null
-        }
-
-        if (e == -1) {
-            e = this.lns.length
-        }
-
-        return new RLines(this, s, e)
+        return new Text(lns)
     }
 }
 
-module.exports = { Reader: Reader, RLines: RLines, RLine: RLine, RBlock: RBlock, Transaction: Transaction }
+module.exports = { Reader: Reader }
