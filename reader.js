@@ -10,11 +10,19 @@ class Line {
         return this.no
     }
 
+    beginTx() {
+        this.toff = this.off
+
+        return this
+    }
+
     commitTx() {
         this.off = this.toff
         if (this.off > this.v.length) {
             this.off = this.v.length
         }
+
+        return this
     }
 
     move(pos) {
@@ -45,12 +53,16 @@ class Lines {
     beginTx() {
         this.tcur = this.cur
         this.tx = new Array()
+
+        return this
     }
 
     commitTx() {
         this.cur = this.tcur
         this.tx.forEach(ln => { ln.commitTx() })
         this.tx = null
+
+        return this
     }
 
     value() {
@@ -173,4 +185,4 @@ class Reader {
     }
 }
 
-module.exports = { Reader: Reader }
+module.exports = { Reader: Reader, Line: Line }
