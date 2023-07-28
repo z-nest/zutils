@@ -35,6 +35,16 @@ class Line {
         return this.v.slice(this.off)
     }
 
+    isBlank() {
+        let i = 0
+        while (i < this.v.length
+            && (this.v[i] == " " || this.v[i] == "\t")) {
+            i++
+        }
+
+        return (i == this.v.length)
+    }
+
     EOL() {
         return this.off == this.v.length
     }
