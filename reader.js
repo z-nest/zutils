@@ -7,51 +7,30 @@ class Trasaction {
     }
 
     beginTx() {
-        if (this.btx) {
-            return
+        if (this.ch != null) {
+            this.ch.forEach(c => { c.resetTx() })
         }
-
         this.toff = this.off
         this.btx = true
         this.ch = new Array()
     }
 
     commitTx() {
-        if (!(this.btx)) {
-            return
+        if (this.ch != null) {
+            this.ch.forEach(c => { c.commitTx() })
         }
-
-        this.ch.forEach(c => { c.commitTx() })
         this.ch = null
         this.off = this.toff
         this.btx = false
     }
 
-    moveto(off) {
+    knot() {
         if (this.btx) {
-            this.toff = this.off + off
+            this.off = this.toff
             return
         }
 
-        this.off = off
-    }
-
-    movenext() {
-        if (this.btx) {
-            this.toff += 1
-            return
-        }
-
-        this.off += 1
-    }
-
-    moveback() {
-        if (this.btx) {
-            this.toff -= 1
-            return
-        }
-
-        this.off -= 1
+        this.toff = this.off
     }
 
     offset() {
@@ -66,13 +45,35 @@ class Trasaction {
         return this.btx
     }
 
+    reset() {
+        this.btx = false
+    }
+
+    moveto(off) {
+        if (this.btx) {
+            this.toff = off
+            return
+        }
+
+        this.off = off
+    }
+
+    step(off) {
+        if (this.btx) {
+            this.toff = this.off + off
+            return
+        }
+
+        this.off = this.toff + off
+    }
+
     move(obj, off) {
         if (!obj.isInTx() && this.btx) {
             obj.beginTx()
             this.ch.push(obj)
         }
 
-        obj.moveto(off)
+        obj.step(off)
     }
 }
 
@@ -86,10 +87,16 @@ class Line extends Trasaction {
     }
 
     value() {
+        return this.val
+    }
+
+    left() {
+        this.knot()
         return this.val.slice(this.offset())
     }
 
     len() {
+
         return this.end
     }
 
@@ -111,10 +118,10 @@ class Line extends Trasaction {
         let i = this.offset()
         while (i < this.end
             && (this.val[i] == " " || this.val[i] == "\t")) {
-            this.movenext()
             i++
         }
 
+        this.moveto(i)
         return this
     }
 
@@ -161,18 +168,30 @@ class Lines extends Trasaction {
         return ct
     }
 
+    left() {
+        let ct = ""
+        let idx = this.start
+        for (; idx < this.end - 1; idx++) {
+            let ln = this.txt.line(idx)
+            ct += ln.left() + '\n'
+        }
+        let ln = this.txt.line(idx)
+        ct += ln.left()
+
+        return ct
+    }
+
     first() {
         return this.txt.line(this.start)
     }
 
     next() {
         let off = this.offset()
-
         if (off < this.end - 1) {
-            this.movenext()
+            this.moveto(off + 1)
             return this.txt.line(off + 1)
         } else if (off == this.end - 1) {
-            this.movenext()
+            this.moveto(this.end)
             return null
         }
 
@@ -182,22 +201,13 @@ class Lines extends Trasaction {
     back() {
         let off = this.offset()
         if (off > 0) {
-            this.moveback()
+            this.moveto(off - 1)
             return this.txt.line(off - 1)
         }
     }
 
     current() {
         return this.txt.line(this.offset())
-    }
-
-    to(ln) {
-        if (ln >= this.start && ln <= this.end) {
-            this.moveto(ln)
-            return this.txt.line(ln)
-        }
-
-        return null
     }
 
     number() {
