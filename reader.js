@@ -100,7 +100,7 @@ class Line extends Trasaction {
         return this.end
     }
 
-    isEmpty() {
+    reachEnd() {
         return this.offset() == this.end
     }
 
@@ -218,7 +218,7 @@ class Lines extends Trasaction {
         return new Lines(this.txt, s, e)
     }
 
-    isEmpty() {
+    reachEnd() {
         return this.offset() == this.end
     }
 }

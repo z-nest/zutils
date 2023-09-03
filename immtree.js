@@ -198,6 +198,15 @@ class Immtree {
         return nd.path(path)
     }
 
+    appendChild(path, nd) {
+        let tree = this.immutable(path)
+
+        let pnd = tree.find(path)
+        pnd.insertAt(0, nd)
+
+        return tree
+    }
+    
     insertBefore(path, nd) {
         let ppath = path.slice(1)
         let tree = this.immutable(ppath)
