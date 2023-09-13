@@ -24,6 +24,14 @@ class Trasaction {
         this.btx = false
     }
 
+    isInTx() {
+        return this.btx
+    }
+
+    resetTx() {
+        this.btx = false
+    }
+
     knot() {
         if (this.btx) {
             this.off = this.toff
@@ -41,13 +49,6 @@ class Trasaction {
         return this.off
     }
 
-    isInTx() {
-        return this.btx
-    }
-
-    reset() {
-        this.btx = false
-    }
 
     moveto(off) {
         if (this.btx) {
