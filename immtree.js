@@ -2,6 +2,7 @@ class Immnode {
     constructor() {
         this.ch = new Array() // child list
         this.pt = null        // path
+        this.mk = false       // marked
     }
 
     eachChild(cb) {
@@ -22,8 +23,16 @@ class Immnode {
         return nd
     }
 
+    childrenNum() {
+        return this.ch.length
+    }
+
     getChildren() {
         return this.ch
+    }
+
+    getChild(idx) {
+        return this.ch[idx]
     }
 
     path(pat) {
@@ -143,6 +152,18 @@ class Immnode {
 
         return this
     }
+
+    marked() {
+        this.mk = true
+    }
+
+    unmark() {
+        this.mk = false
+    }
+
+    isMarked() {
+        return this.mk
+    }
 }
 
 class Immtree {
@@ -206,7 +227,7 @@ class Immtree {
 
         return tree
     }
-    
+
     insertBefore(path, nd) {
         let ppath = path.slice(1)
         let tree = this.immutable(ppath)
@@ -499,6 +520,50 @@ class Immtree {
 
         // node concat
         return this.concatNode(path)
+    }
+
+    leavesUnder(pa, offset, ls) {
+        let n = pa.childrenNum()
+        if (offset >= n) {
+            return false
+        }
+
+        let i = offset
+        let nd = null
+        for (; i < n; i++) {
+            nd = pa.getChild(i)
+            if (nd.isMarked()) {
+                return true
+            }
+
+            if (!nd.hasChild()) {
+                ls.push(nd)
+                continue
+            }
+
+            if (this.leavesUnder(nd, 0, ls)) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    leavesInRange(from, to) {
+        let ls = new Array()
+
+        let f = this.find(from)
+        f.marked()
+        let t = this.find(to)
+        t.marked()
+        ls.push(f)
+
+        let pa = this.parent(from)
+        let offset = from[0] + 1
+        this.leavesUnder(pa, offset, ls)
+
+        ls.push(t)
+        return ls
     }
 }
 
