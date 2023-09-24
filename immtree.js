@@ -228,6 +228,15 @@ class Immtree {
         return tree
     }
 
+    removeChild(path) {
+        let tree = this.immutable(path)
+
+        let pnd = tree.find(path)
+        pnd.removeAt(0)
+
+        return tree
+    }
+
     insertBefore(path, nd) {
         let ppath = path.slice(1)
         let tree = this.immutable(ppath)
@@ -553,16 +562,19 @@ class Immtree {
         let ls = new Array()
 
         let f = this.find(from)
-        f.marked()
         let t = this.find(to)
+        f.marked()
         t.marked()
-        ls.push(f)
 
+        ls.push(f)
         let pa = this.parent(from)
         let offset = from[0] + 1
         this.leavesUnder(pa, offset, ls)
-
         ls.push(t)
+
+        f.unmark()
+        t.unmark()
+
         return ls
     }
 }

@@ -4,8 +4,50 @@ class Position {
         this.offset = offset
     }
 
+    getPath() {
+        return this.path
+    }
+
+    getOffset() {
+        return this.offset
+    }
+
     copy() {
         return new Position(this.path.copy(), this.offset)
+    }
+
+    equal(pos) {
+        return this.path.equal(pos.path) && this.offset == pos.offset
+    }
+}
+
+class NodeSelection {
+    constructor(path) {
+        this.path = path
+        this.st = 0
+        this.ed = -1
+    }
+
+    start(start) {
+        this.st = start
+        return this
+    }
+
+    end(end) {
+        this.ed = end
+        return this
+    }
+
+    getPath() {
+        return this.path
+    }
+
+    getStart() {
+        return this.st
+    }
+
+    getEnd() {
+        return this.ed
     }
 }
 
@@ -79,4 +121,4 @@ class Selection {
     }
 }
 
-module.exports = { Position: Position, Selection: Selection }
+module.exports = { Position: Position, NodeSelection: NodeSelection, Selection: Selection }

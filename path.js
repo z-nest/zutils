@@ -10,6 +10,12 @@ class Path extends Array {
         return this.slice(1)
     }
 
+    child(idx) {
+        let c = this.copy()
+        c.splice(0, 0, idx)
+        return c
+    }
+
     previous() {
         let p = this.copy()
         p[0] = p[0] - 1
@@ -38,6 +44,7 @@ class Path extends Array {
             if (this[idx] != p[idx]) {
                 return false
             }
+            idx++
         }
 
         return true
