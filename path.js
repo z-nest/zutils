@@ -16,6 +16,10 @@ class Path extends Array {
         return c
     }
 
+    index(){
+        return this[0]
+    }
+
     previous() {
         let p = this.copy()
         p[0] = p[0] - 1

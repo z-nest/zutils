@@ -563,6 +563,11 @@ class Immtree {
 
         let f = this.find(from)
         let t = this.find(to)
+        if(f == t) {
+            ls.push(f)
+            return ls
+        }
+
         f.marked()
         t.marked()
 
