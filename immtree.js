@@ -359,6 +359,10 @@ class Immtree {
         return nd.firstLeaf()
     }
 
+    first() {
+        return this.rt.firstLeaf()
+    }
+
     previousSblingPath(path) {
         let pa = this.parent(path)
 
@@ -563,7 +567,7 @@ class Immtree {
 
         let f = this.find(from)
         let t = this.find(to)
-        if(f == t) {
+        if (f == t) {
             ls.push(f)
             return ls
         }
