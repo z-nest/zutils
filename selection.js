@@ -22,10 +22,14 @@ class Position {
 }
 
 class NodeSelection {
-    constructor(path) {
-        this.path = path
+    constructor(pa) {
+        this.pa = pa
         this.st = 0
         this.ed = -1
+    }
+
+    path(pa) {
+        this.pa = pa
     }
 
     start(start) {
@@ -39,7 +43,7 @@ class NodeSelection {
     }
 
     getPath() {
-        return this.path
+        return this.pa
     }
 
     getStart() {
